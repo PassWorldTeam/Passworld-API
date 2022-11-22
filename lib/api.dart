@@ -1,6 +1,7 @@
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
+// Class for all static function that handles api routes
 class API {
   /*---------------|
   |-------GET------|
@@ -11,9 +12,7 @@ class API {
     return Response.ok('Greetings from PassWorld!\n');
   }
 
-  // Request for authentification
-  // Compare given cyphered_hash_password with db cyphered_hash_password
-  // Return boolean -> true (hash match) false (no match)
+  // Check for authentication
   static Response authenticator(Request req) {
     final mail = req.params['mail'];
     final password = req.params['cyphered_password_hash'];
@@ -21,9 +20,7 @@ class API {
     return Response.ok('true');
   }
 
-  // Request sqlite password db
-  // Check auth
-  // Return sqlite file
+  // Download sqlite password file
   static Response downloadPasswordDb(Request req) {
     final mail = req.params['mail'];
     final password = req.params['cyphered_password_hash'];
@@ -47,6 +44,7 @@ class API {
   |------POST------|
   |---------------*/
 
+  // Create account
   static Response createAccount(Request req) {
     return Response.ok("");
   }
@@ -55,14 +53,17 @@ class API {
   |-------PUT------|
   |---------------*/
 
+  // Update master password
   static Response changeMasterPassword(Request req) {
     return Response.ok("master password chnaged");
   }
 
+  // Update mail
   static Response changeMail(Request req) {
     return Response.ok("master password chnaged");
   }
 
+  // Upload sqlite password file
   static Response uploadPasswordDb(Request req) {
     return Response.ok("");
   }
@@ -71,6 +72,7 @@ class API {
   |-----DELETE-----|
   |---------------*/
 
+  // Delete account
   static Response deleteAccount(Request req) {
     return Response.ok("");
   }
