@@ -1,27 +1,25 @@
 import 'dart:io';
-import 'dart:async';
-
+import 'package:r_api/api.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:path/path.dart' as path;
 
 // Configure routes.
 final _router = Router()
-  ..get('/', _rootHandler)
-  ..get('/echo/<message>', _echoHandler)
-  ..get('/down/<file>', _fileHandler);
+  // GET
+  ..get('/', API.rootHandler)
+  ..get('/auth', API.authenticator)
+  ..get('/user/down-password-file', API.downloadPasswordDb)
+  // POST
+  ..post('/user/create-account', API.createAccount)
+  // PUT
+  ..put('/user/change-master-password', API.changeMasterPassword)
+  ..put('/user/up-password-file', API.uploadPasswordDb)
+  ..put('/user/change-mail', API.changeMail)
+  // DELETE
+  ..delete('/user/delete-account', API.deleteAccount);
 
-Response _rootHandler(Request req) {
-  return Response.ok('Hello, World!\n');
-}
-
-Response _echoHandler(Request req) {
-  print(req.url);
-  final message = req.params['message'];
-  return Response.ok('$message\n');
-}
-
+/*
 Response _fileHandler(Request req) {
   final String _basePath = '/home/hel/Projets/r_api/res/';
   final String reqFile = path.join(_basePath, req.params['file']);
@@ -38,6 +36,7 @@ Future<bool> fileExist(String path) {
   print(exist);
   return exist;
 }
+*/
 
 void main(List<String> args) async {
   // Use any available host or container IP (usually `0.0.0.0`).
