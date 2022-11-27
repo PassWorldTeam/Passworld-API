@@ -16,7 +16,7 @@ steps:
       - dart compile exe bin/server.dart -o bin/server
     
   - name: docker-build
-    image: dart:stable
+    image: plugins/docker
     settings:
       dockerfile: Dockerfile
       context: .
