@@ -12,6 +12,7 @@ steps:
   - name: build-server
     image: dart:stable
     commands:
+      - dart pub get
       - dart compile exe bin/server.dart -o bin/server
     
   - name: docker-build
