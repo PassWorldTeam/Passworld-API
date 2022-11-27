@@ -40,7 +40,7 @@ Future<bool> fileExist(String path) {
 
 void main(List<String> args) async {
   // Use any available host or container IP (usually `0.0.0.0`).
-  final ip = 'localhost';
+  final ip = InternetAddress.anyIPv4;
 
   // Configure a pipeline that logs requests.
   final handler = Pipeline().addMiddleware(logRequests()).addHandler(_router);
