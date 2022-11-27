@@ -14,18 +14,6 @@ steps:
     commands:
       - dart compile exe bin/server.dart -o bin/server
     
-    
-kind: pipeline
-type: docker
-name: CD
-
-trigger:
-  event:
-    - push
-  branch:
-    - master
-    
-steps:
   - name: docker-build
     image: dart:stable
     settings:
@@ -38,7 +26,6 @@ steps:
       password:
         from_secret: SECRET_REGISTRY_PASSWORD
     depends_on: [build-server]
-
 
   - name: docker-deployment
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
