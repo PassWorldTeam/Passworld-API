@@ -36,3 +36,32 @@ steps:
         COMMAND: create
         OVERWRITE: true
     depends_on: [docker-build]
+
+kind: pipeline
+type: docker
+name: bd
+
+trigger:
+  event:
+    - push
+  branch:
+    - master
+    
+steps:
+  
+  - name: database_users
+    image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
+    environment:
+        IMAGENAME: mariadb:10
+        CONTAINERNAME: db_account
+        COMMAND: create
+        OVERWRITE: false
+        PRIVATE: false
+        CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:
+          from_secret: db_root_password
+        CODEFIRST_CLIENTDRONE_ENV_MARIADB_DATABASE:
+          from_secret: db_database
+        CODEFIRST_CLIENTDRONE_ENV_MARIADB_USER:
+          from_secret: db_user
+        CODEFIRST_CLIENTDRONE_ENV_MARIADB_PASSWORD:
+          from_secret: db_password
