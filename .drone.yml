@@ -37,23 +37,11 @@ steps:
         OVERWRITE: true
     depends_on: [docker-build]
 
-kind: pipeline
-type: docker
-name: bd
-
-trigger:
-  event:
-    - push
-  branch:
-    - master
-    
-steps:
-  
-  - name: database_users
+  - name: db_creation
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
     environment:
         IMAGENAME: mariadb:10
-        CONTAINERNAME: db_account
+        CONTAINERNAME: db_accounts²
         COMMAND: create
         OVERWRITE: false
         PRIVATE: false
