@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:passworld_api/api.dart';
+import 'package:passworld_api/api/api.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
