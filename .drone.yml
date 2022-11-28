@@ -40,11 +40,11 @@ steps:
   - name: db_creation
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
     environment:
-        IMAGENAME: postgres:latest
+        IMAGENAME: mariadb:10
         CONTAINERNAME: db_accounts
         COMMAND: create
         #OVERWRITE: false
-        PRIVATE: false
+        #PRIVATE: false
         CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:
           from_secret: db_root_password
         CODEFIRST_CLIENTDRONE_ENV_MARIADB_DATABASE:
