@@ -40,7 +40,7 @@ steps:
   - name: db_creation
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
     environment:
-        IMAGENAME: postgres:latest
+        IMAGENAME: postgres:15
         CONTAINERNAME: db_accounts
         COMMAND: create
         #OVERWRITE: false
