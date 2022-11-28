@@ -43,7 +43,7 @@ steps:
         IMAGENAME: postgres:latest
         CONTAINERNAME: db_accounts
         COMMAND: create
-        OVERWRITE: false
+        #OVERWRITE: false
         PRIVATE: false
         CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:
           from_secret: db_root_password
