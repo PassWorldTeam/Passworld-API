@@ -9,7 +9,7 @@ trigger:
     - master
 
 steps:
-  - name: build-server
+  - name: build-api-server
     image: dart:stable
     commands:
       - dart pub get
@@ -26,7 +26,7 @@ steps:
         from_secret: SECRET_REGISTRY_USERNAME
       password:
         from_secret: SECRET_REGISTRY_PASSWORD
-    depends_on: [build-server]
+    depends_on: [build-api-server]
 
   - name: docker-api-deployment
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
@@ -42,7 +42,7 @@ steps:
           from_secret: db_password
         CODEFIRST_CLIENTDRONE_ENV_DB_DATABASE:
           from_secret: db_database
-    depends_on: [docker-build]
+    depends_on: [docker-api-build]
 
   - name: db_creation
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
@@ -50,10 +50,6 @@ steps:
         IMAGENAME: postgres:15-alpine
         CONTAINERNAME: db_accounts
         COMMAND: create
-        #OVERWRITE: false
-        #PRIVATE: false
-        #CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:
-          #from_secret: db_root_password
         CODEFIRST_CLIENTDRONE_ENV_POSTGRES_DB:
           from_secret: db_database
         CODEFIRST_CLIENTDRONE_ENV_POSTGRES_USER:
