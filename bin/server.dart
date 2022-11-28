@@ -8,7 +8,7 @@ import 'package:shelf_router/shelf_router.dart';
 final _router = Router()
   // GET
   ..get('/', API.rootHandler)
-  ..get('/auth', API.authenticator)
+  ..post('/auth', API.authenticator)
   ..get('/user/down-password-file', API.downloadPasswordDb)
   // POST
   ..post('/user/create-account', API.createAccount)
