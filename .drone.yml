@@ -15,7 +15,7 @@ steps:
       - dart pub get
       - dart compile exe bin/server.dart -o bin/server
     
-  - name: docker-build
+  - name: docker-api-build
     image: plugins/docker
     settings:
       dockerfile: Dockerfile
@@ -28,13 +28,20 @@ steps:
         from_secret: SECRET_REGISTRY_PASSWORD
     depends_on: [build-server]
 
-  - name: docker-deployment
+  - name: docker-api-deployment
     image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
     environment:
         IMAGENAME: hub.codefirst.iut.uca.fr/remi.arnal/passworld-api:latest
         CONTAINERNAME: passworld-api
         COMMAND: create
         OVERWRITE: true
+        CODEFIRST_CLIENTDRONE_ENV_DB_SERVER: db_accounts-remiarnal
+        CODEFIRST_CLIENTDRONE_ENV_DB_USER:
+          from_secret: db_user
+        CODEFIRST_CLIENTDRONE_ENV_DB_PASSWORD:
+          from_secret: db_password
+        CODEFIRST_CLIENTDRONE_ENV_DB_DATABASE:
+          from_secret: db_database
     depends_on: [docker-build]
 
   - name: db_creation
