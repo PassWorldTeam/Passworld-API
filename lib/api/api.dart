@@ -76,4 +76,22 @@ class API {
   static Response deleteAccount(Request req) {
     return Response.ok("");
   }
+
+  /*---------------|
+  |-------MISC-----|
+  |---------------*/
+
+  // Check if required fields are in req body
+  static Future<bool> checkRequiredFields(
+      List<String> fields, Request req) async {
+    // json object read -> check dic keys
+    final body = await req.readAsString();
+    bool check = false;
+    for (String s in fields) {
+      if (req.params['$s'] == "") {
+        return false;
+      }
+    }
+    return true;
+  }
 }

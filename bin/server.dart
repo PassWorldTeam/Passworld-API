@@ -8,16 +8,16 @@ import 'package:shelf_router/shelf_router.dart';
 final _router = Router()
   // GET
   ..get('/', API.rootHandler)
+  // POST (EN VRAI C'EST DES GET AVEC UN BODY)
+  ..post('/user/password-file', API.downloadPasswordDb)
   ..post('/auth', API.authenticator)
-  ..get('/user/down-password-file', API.downloadPasswordDb)
-  // POST
-  ..post('/user/create-account', API.createAccount)
+  ..post('/user/account', API.createAccount) // vrai post
   // PUT
-  ..put('/user/change-master-password', API.changeMasterPassword)
-  ..put('/user/up-password-file', API.uploadPasswordDb)
+  ..put('/user/master-password', API.changeMasterPassword)
+  ..put('/user/password-file', API.uploadPasswordDb)
   ..put('/user/change-mail', API.changeMail)
   // DELETE
-  ..delete('/user/delete-account', API.deleteAccount);
+  ..delete('/user/account', API.deleteAccount);
 
 /*
 Response _fileHandler(Request req) {
