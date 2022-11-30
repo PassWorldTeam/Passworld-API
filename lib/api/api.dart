@@ -1,5 +1,6 @@
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'dart:convert';
 
 // Class for all static function that handles api routes
 class API {
@@ -13,11 +14,14 @@ class API {
   }
 
   // Check for authentication
-  static Response authenticator(Request req) {
-    final mail = req.params['mail'];
-    final password = req.params['cyphered_password_hash'];
+  static Future<Response> authenticator(Request req) async {
+    final List<String> required = ["mail", "password"];
 
-    return Response.ok('true');
+    if (await checkRequiredFields(required, req)) {
+      return Response.ok('true');
+    }
+
+    return Response.badRequest();
   }
 
   // Download sqlite password file
@@ -85,10 +89,11 @@ class API {
   static Future<bool> checkRequiredFields(
       List<String> fields, Request req) async {
     // json object read -> check dic keys
-    final body = await req.readAsString();
+    var tmp = await req.readAsString();
+    final body = json.decode(tmp);
     bool check = false;
     for (String s in fields) {
-      if (req.params['$s'] == "") {
+      if (body['$s'] == "") {
         return false;
       }
     }

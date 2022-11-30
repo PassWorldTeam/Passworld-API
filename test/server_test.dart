@@ -23,17 +23,23 @@ void main() {
   test('Root', () async {
     final response = await get(Uri.parse('$host/'));
     expect(response.statusCode, 200);
-    expect(response.body, 'Hello, World!\n');
+    expect(response.body, 'Greetings from PassWorld!\n');
   });
 
-  test('Echo', () async {
-    final response = await get(Uri.parse('$host/echo/hello'));
-    expect(response.statusCode, 200);
-    expect(response.body, 'hello\n');
-  });
+  // test('Echo', () async {
+  //   final response = await get(Uri.parse('$host/echo/hello'));
+  //   expect(response.statusCode, 200);
+  //   expect(response.body, 'hello\n');
+  // });
 
   test('404', () async {
     final response = await get(Uri.parse('$host/foobar'));
-    expect(response.statusCode, 404);
+    expect(response.body, 'Route not found\n');
+  });
+
+  test('Auth', () async {
+    final resonse = await get(Uri.parse('$host/auth'));
+    expect(resonse.statusCode, 400);
+    expect(resonse.body, 'false');
   });
 }
