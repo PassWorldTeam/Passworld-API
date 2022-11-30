@@ -25,15 +25,15 @@ class AccountsToPostgres {
   }
 
   @override
-  void create(
-      String email, String hash, String salt, List<String> twoFaStr) async {
+  void create(String email, String hash,
+      String salt /*, List<String> twoFaStr*/) async {
     connection.query(
         "INSERT INTO \"Account\" VALUES(@id,@hash,@salt,@twofa,@passwords)",
         substitutionValues: {
           "id": email,
           "hash": hash,
-          "salt": salt,
-          "twofa": twoFaStr
+          "salt": salt /*,
+          "twofa": twoFaStr*/
         });
     print("Account succesfully created");
   }
