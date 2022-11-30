@@ -58,7 +58,7 @@ class API {
 
     if (await checkRequiredFields(required, body)) {
       AccountsToPostgres db = AccountsToPostgres();
-      List<String> twofa = body[required[3]];
+      // List<String> twofa = body[required[3]];
       db.create(
           body[required[0]], body[required[1]], body[required[2]] /*, twofa*/);
       return Response.ok('true');
