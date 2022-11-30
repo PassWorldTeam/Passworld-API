@@ -9,6 +9,7 @@ environment:
 dependencies:
   args: ^2.0.0
   path: ^1.8.2
+  postgres: ^2.5.2
   shelf: ^1.1.0
   shelf_router: ^1.0.0
 
