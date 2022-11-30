@@ -27,7 +27,7 @@ class AccountsToPostgres {
   @override
   void create(String email, String hash,
       String salt /*, List<String> twoFaStr*/) async {
-    connection.query(
+    await connection.query(
         "INSERT INTO \"Account\" VALUES(@id,@hash,@salt,@twofa,@passwords)",
         substitutionValues: {
           "id": email,
