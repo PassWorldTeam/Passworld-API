@@ -10,11 +10,11 @@ class AccountsToPostgres {
 
   // Production
   final connection = PostgreSQLConnection(
-      Platform.environment["ENV_DB_SERVER"]!,
+      Platform.environment["CODEFIRST_CLIENTDRONE_ENV_DB_SERVER"]!,
       5432,
-      Platform.environment["ENV_DB_DATABASE"]!,
-      username: Platform.environment["ENV_DB_USER"],
-      password: Platform.environment["ENV_DB_PASSWORD"]);
+      Platform.environment["CODEFIRST_CLIENTDRONE_ENV_DB_DATABASE"]!,
+      username: Platform.environment["CODEFIRST_CLIENTDRONE_ENV_DB_USER"],
+      password: Platform.environment["CODEFIRST_CLIENTDRONE_ENV_DB_PASSWORD"]);
 
   AccountsToPostgres() {
     initConnection();
