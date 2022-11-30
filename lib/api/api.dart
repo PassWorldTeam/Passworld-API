@@ -90,13 +90,13 @@ class API {
       List<String> fields, Request req) async {
     // json object read -> check dic keys
     var tmp = await req.readAsString();
-    final body = json.decode(tmp);
+    final Map<String, dynamic> body = json.decode(tmp);
     bool check = false;
     for (String s in fields) {
       if (body['$s'] == "") {
         return false;
       }
     }
-    return true;
+    return false;
   }
 }
