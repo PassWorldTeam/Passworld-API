@@ -1,6 +1,7 @@
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'dart:convert';
+import 'package:passworld_api/database/accounts_to_postgres.dart';
 
 // Class for all static function that handles api routes
 class API {
@@ -15,13 +16,14 @@ class API {
 
   // Check for authentication
   static Future<Response> authenticator(Request req) async {
-    final List<String> required = ["mail", "password"];
+    // final List<String> required = ["email", "password"];
 
-    if (await checkRequiredFields(required, req)) {
-      return Response.ok('true');
-    }
-
-    return Response.badRequest();
+    // if (await checkRequiredFields(required, req)) {
+    //   return Response.ok('true');
+    // } else {
+    //   return Response.badRequest();
+    // }
+    return Response(404);
   }
 
   // Download sqlite password file
@@ -49,8 +51,19 @@ class API {
   |---------------*/
 
   // Create account
-  static Response createAccount(Request req) {
-    return Response.ok("");
+  static Future<Response> createAccount(Request req) async {
+    final List<String> required = ["email", "password", "salt", "twofa"];
+    var tmp = await req.readAsString();
+    final Map<String, dynamic> body = json.decode(tmp);
+
+    if (await checkRequiredFields(required, body)) {
+      AccountsToPostgres db = AccountsToPostgres();
+      db.create(body[required[0]], body[required[1]], body[required[2]],
+          body[required[3]]);
+      return Response.ok('true');
+    } else {
+      return Response.badRequest();
+    }
   }
 
   /*---------------|
@@ -87,16 +100,18 @@ class API {
 
   // Check if required fields are in req body
   static Future<bool> checkRequiredFields(
-      List<String> fields, Request req) async {
+      List<String> fields, Map<String, dynamic> body) async {
     // json object read -> check dic keys
-    var tmp = await req.readAsString();
-    final Map<String, dynamic> body = json.decode(tmp);
-    bool check = false;
-    for (String s in fields) {
-      if (body['$s'] == "") {
+    for (String itFields in fields) {
+      if (!body.containsKey(itFields)) {
+        print(itFields);
+        return false;
+      }
+      if (body[itFields] == "") {
+        print(itFields);
         return false;
       }
     }
-    return false;
+    return true;
   }
 }
