@@ -52,7 +52,7 @@ class API {
 
   // Create account
   static Future<Response> createAccount(Request req) async {
-    final List<String> required = ["email", "password", "salt", "twofa"];
+    final List<String> required = ["email", "password", "salt"];
     var tmp = await req.readAsString();
     final Map<String, dynamic> body = json.decode(tmp);
 
