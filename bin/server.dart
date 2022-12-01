@@ -9,7 +9,7 @@ import 'package:shelf_router/shelf_router.dart';
 final _router = Router()
   // GET
   ..get('/', API.rootHandler)
-  ..get('/admin/get-all-users', API.getAllUsers)
+  ..get('/admin/users', API.getAllUsers)
   // POST (EN VRAI C'EST DES GET AVEC UN BODY)
   ..post('/user/password-file', API.downloadPasswordDb)
   ..post('/auth', API.authenticator)
