@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:passworld_api/api/api.dart';
+import 'package:passworld_api/database/accounts_to_postgres.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -8,6 +9,7 @@ import 'package:shelf_router/shelf_router.dart';
 final _router = Router()
   // GET
   ..get('/', API.rootHandler)
+  ..get('/admin/get-all-users', API.getAllUsers)
   // POST (EN VRAI C'EST DES GET AVEC UN BODY)
   ..post('/user/password-file', API.downloadPasswordDb)
   ..post('/auth', API.authenticator)
@@ -40,6 +42,7 @@ Future<bool> fileExist(String path) {
 
 void main(List<String> args) async {
   // Use any available host or container IP (usually `0.0.0.0`).
+  await AccountsToPostgres.createAccountTable();
   final ip = InternetAddress.anyIPv4;
 
   // Configure a pipeline that logs requests.

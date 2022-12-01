@@ -1,3 +1,5 @@
+import 'package:passworld_api/db_to_api.dart';
+import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'dart:convert';
@@ -57,9 +59,8 @@ class API {
     final Map<String, dynamic> body = json.decode(tmp);
 
     if (await checkRequiredFields(required, body)) {
-      AccountsToPostgres db = AccountsToPostgres();
       // List<String> twofa = body[required[3]];
-      db.create(
+      await AccountsToPostgres.create(
           body[required[0]], body[required[1]], body[required[2]] /*, twofa*/);
       return Response.ok('true');
     } else {
@@ -114,5 +115,15 @@ class API {
       }
     }
     return true;
+  }
+
+  //
+  // ADMIN
+  //
+
+  static Future<Response> getAllUsers(Request req) async {
+    PostgreSQLResult res = await AccountsToPostgres.getAllUsers();
+    String json = DB2API.map2Json(res);
+    return Response.ok(json);
   }
 }
