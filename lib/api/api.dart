@@ -124,6 +124,7 @@ class API {
   static Future<Response> getAllUsers(Request req) async {
     PostgreSQLResult res = await AccountsToPostgres.getAllUsers();
     String json = DB2API.allUsersToJson(res);
-    return Response.ok(json);
+    return Response.ok(json,
+        headers: {'Content-Type': 'application/json;charset=utf-8'});
   }
 }
