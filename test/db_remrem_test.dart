@@ -5,7 +5,7 @@ import 'package:passworld_api/db_to_api.dart';
 
 void main() async {
   await AccountsToPostgres.createAccountTable();
-  await AccountsToPostgres.create("remremc@gmail.com", "hehehe", "tameare");
+  //await AccountsToPostgres.create("remremj@gmail.com", "hehehe", "tameare");
   var res = await AccountsToPostgres.getAllUsers();
   for (final row in res) {
     stdout.write(row[0]);
@@ -13,7 +13,7 @@ void main() async {
     print(row[2]);
   }
   //print(res.runtimeType);
-  String json = DB2API.map2Json(res);
+  String json = DB2API.allUsersToJson(res);
   print(json);
   AccountsToPostgres.closeConnection();
   return;

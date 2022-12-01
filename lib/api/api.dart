@@ -123,7 +123,7 @@ class API {
 
   static Future<Response> getAllUsers(Request req) async {
     PostgreSQLResult res = await AccountsToPostgres.getAllUsers();
-    String json = DB2API.map2Json(res);
+    String json = DB2API.allUsersToJson(res);
     return Response.ok(json);
   }
 }

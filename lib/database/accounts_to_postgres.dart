@@ -121,6 +121,7 @@ class AccountsToPostgres {
   static Future<PostgreSQLResult> getAllUsers() async {
     PostgreSQLResult res =
         await connection.query("SELECT id, hash, salt from \"Account\"");
+    print("🟥 ADMIN: get all users");
     return res;
   }
 }
