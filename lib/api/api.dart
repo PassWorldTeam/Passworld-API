@@ -25,11 +25,13 @@ class API {
       try {
         await AccountsToPostgres.selectHashById(body[required[0]]);
       } catch (e) {
-        return Response(404); // no hash found -> 404 (Not Found)
+        return Response(404,
+            body: 'Not Found'); // no hash found -> 404 (Not Found)
       }
-      return Response.ok('true');
+      return Response.ok('Succesfully Authenticated'); // 200 (Ok)
     } else {
-      return Response.badRequest();
+      return Response.badRequest(
+          body: 'Bad password or email !'); // 400 (Bad Request)
     }
   }
 
@@ -68,11 +70,13 @@ class API {
         await AccountsToPostgres.create(body[required[0]], body[required[1]],
             body[required[2]] /*, twofa*/);
       } catch (e) {
-        return Response(409); // email already exists -> 409 (Conflict)
+        return Response(409,
+            body: 'Account already existing'); // 409 (Conflict)
       }
-      return Response.ok('Account successfully created');
+      return Response(201,
+          body: 'Account successfully created'); // 201 (Created)
     } else {
-      return Response.badRequest();
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
     }
   }
 
