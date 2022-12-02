@@ -4,22 +4,28 @@ import 'dart:io';
 import 'package:postgres/postgres.dart';
 
 class AccountsToPostgres {
-  /* Dev Coco */
-  // static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
-  //     username: 'pass', password: '1p2a3s4s5');
+  
+   static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
+       username: 'pass', password: '1p2a3s4s5');
 
   /* Dev RemRem */
   // static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
   //     username: 'hel', password: '');
 
+  /* Error severity:
+      - error : no user
+      - unknown : DB logic problem
+  */
+
+
   /* Production */
-  static final connection = PostgreSQLConnection(
+  /*static final connection = PostgreSQLConnection(
       Platform.environment["DB_SERVER"]!,
       5432,
       Platform.environment["DB_DATABASE"]!,
       username: Platform.environment["DB_USER"],
       password: Platform.environment["DB_PASSWORD"]);
-
+  */
   AccountsToPostgres() {
     //initConnection();
   }
@@ -56,6 +62,7 @@ class AccountsToPostgres {
           "salt": salt /*,
           "twofa": twoFaStr*/
         });
+    selectHashById(email);//Testing if the user is created
     print("✅ Account succesfully created");
   }
 
@@ -63,8 +70,27 @@ class AccountsToPostgres {
     List<List<dynamic>> results = await connection.query(
         "SELECT hash FROM \"Account\" WHERE id=@identifiant",
         substitutionValues: {"identifiant": id});
+    
+    if(results.length<1){
+      throw PostgreSQLException("No user for this id",severity: PostgreSQLSeverity.error);
+    }
+    if(results.length>1){
+      throw PostgreSQLException("WARNING ! : multiple user with this id",severity: PostgreSQLSeverity.unknown);
+    }
+    return results[0][0];
+  }
 
-    closeConnection();
+  static Future<List<Int>> selectPassFileById(String id) async {
+    List<List<dynamic>> results = await connection.query("SELECT passwords FROM \"Account\" WHERE id=@identifiant",
+    substitutionValues: {"identifiant" : id});
+    
+    if(results.length<1){
+      throw PostgreSQLException("No user for this id",severity: PostgreSQLSeverity.error);
+    }
+    if(results.length>1){
+      throw PostgreSQLException("WARNING ! : multiple user with this id",severity: PostgreSQLSeverity.unknown);
+    }
+
     return results[0][0];
   }
 
@@ -83,10 +109,9 @@ class AccountsToPostgres {
     }
   }
 
-  static Future<void> updateFilePass(
-      String identifiant, File passwordFile) async {
-    List<int> passwordBlob =
-        utf8.encode(await passwordFile.readAsString(encoding: utf8));
+
+  static Future<void> updateFilePass(String identifiant, File passwordFile) async {
+    List<int> passwordBlob =utf8.encode(await passwordFile.readAsString(encoding: utf8));
 
     if (selectHashById(identifiant) == null) {
       return;
@@ -110,8 +135,24 @@ class AccountsToPostgres {
   }
 
   static Future<void> deleteById(String id) async {
+    var deletion = 1;
     await connection.query("DELETE FROM \"Account\" WHERE id=@identifiant",
         substitutionValues: {"identifiant": id});
+
+    try{
+      selectHashById(id);
+    }
+    on PostgreSQLException catch(e){
+
+      if(e.severity==PostgreSQLSeverity.error){
+        deletion = 0;
+      }
+    }
+
+    if(deletion==1){
+      throw PostgreSQLException("User not deleted",severity: PostgreSQLSeverity.unknown);
+    }
+  
   }
 
   //
@@ -124,4 +165,35 @@ class AccountsToPostgres {
     print("🟥 ADMIN: get all users");
     return res;
   }
+
+  static Future<void> flushUsers() async{
+
+    await connection.query("DELETE FROM \"Account\" ");
+
+    List<List<dynamic>> rows = await connection.query("SELECT COUNT(*) FROM \"Account\" ");
+
+    if(rows[0][0]!=0){
+      throw PostgreSQLException("Flush of users did not succeed",severity: PostgreSQLSeverity.unknown);
+    }
+
+    print("🟥 ADMIN: all users deleted");
+
+
+  }
+
+  static Future<void> flushTable() async {
+    await connection.query("DROP TABLE \"Account\" ");
+
+    try{
+
+    await connection.query("SELECT * FROM \"Account\" ");
+    throw PostgreSQLException('Table Not dropped',severity: PostgreSQLSeverity.unknown);
+    }on PostgreSQLException{
+      print("🟥 ADMIN: tables droped");}
+    
+  }
+
+
+
+
 }
