@@ -18,14 +18,19 @@ class API {
 
   // Check for authentication
   static Future<Response> authenticator(Request req) async {
-    // final List<String> required = ["email", "password"];
+    final List<String> required = ["email", "password"];
+    final body = await bodyToJson(req);
 
-    // if (await checkRequiredFields(required, req)) {
-    //   return Response.ok('true');
-    // } else {
-    //   return Response.badRequest();
-    // }
-    return Response(404);
+    if (await checkRequiredFields(required, body)) {
+      try {
+        await AccountsToPostgres.selectHashById(body[required[0]]);
+      } catch (e) {
+        return Response(404); // no hash found -> 404 (Not Found)
+      }
+      return Response.ok('true');
+    } else {
+      return Response.badRequest();
+    }
   }
 
   // Download sqlite password file
@@ -55,14 +60,17 @@ class API {
   // Create account
   static Future<Response> createAccount(Request req) async {
     final List<String> required = ["email", "password", "salt"];
-    var tmp = await req.readAsString();
-    final Map<String, dynamic> body = json.decode(tmp);
+    final body = await bodyToJson(req);
 
     if (await checkRequiredFields(required, body)) {
       // List<String> twofa = body[required[3]];
-      await AccountsToPostgres.create(
-          body[required[0]], body[required[1]], body[required[2]] /*, twofa*/);
-      return Response.ok('true');
+      try {
+        await AccountsToPostgres.create(body[required[0]], body[required[1]],
+            body[required[2]] /*, twofa*/);
+      } catch (e) {
+        return Response(409); // email already exists -> 409 (Conflict)
+      }
+      return Response.ok('Account successfully created');
     } else {
       return Response.badRequest();
     }
@@ -103,7 +111,6 @@ class API {
   // Check if required fields are in req body
   static Future<bool> checkRequiredFields(
       List<String> fields, Map<String, dynamic> body) async {
-    // json object read -> check dic keys
     for (String itFields in fields) {
       if (!body.containsKey(itFields)) {
         print(itFields);
@@ -115,6 +122,11 @@ class API {
       }
     }
     return true;
+  }
+
+  static Future<Map<String, dynamic>> bodyToJson(Request req) async {
+    var tmp = await req.readAsString();
+    return json.decode(tmp);
   }
 
   //
