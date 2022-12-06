@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'package:postgres/postgres.dart';
+
+/* 🟥 🟧 🟨 🟩 🟦 🟪 🟫 ⬛ ⬜ */
 
 class AccountsToPostgres {
   
@@ -43,7 +46,6 @@ class AccountsToPostgres {
   }
 
   static Future<void> createAccountTable() async {
-    await openConnection();
     await connection
         .query(
             "CREATE TABLE IF NOT EXISTS \"Account\"(id TEXT PRIMARY KEY,hash TEXT NOT NULL,salt TEXT NOT NULL,twofa VARCHAR(50)[],passwords INTEGER[])")
@@ -191,6 +193,41 @@ class AccountsToPostgres {
     }on PostgreSQLException{
       print("🟥 ADMIN: tables droped");}
     
+  }
+
+  static Future<void> createLogsTable() async{
+    await connection.query("CREATE TABLE IF NOT EXISTS Log(wwhen TIMESTAMP,wwho char(20),whow char(20),wwhat varchar(800));")
+    .then((value) {
+      print("⬜ ADMIN: Logs table created");
+    });
+  }
+
+  static Future<void> createLogingFunction() async{
+    await connection.query("CREATE OR REPLACE FUNCTION log()RETURNS TRIGGER AS \$\$ BEGIN IF(TG_OP='DELETE')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt); RETURN OLD; ELSEIF(TG_OP='INSERT')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,NEW.id||' '||NEW.hash||' '||NEW.salt);RETURN NEW; ELSE INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt||' => '||NEW.id||' '||NEW.hash||' '||NEW.salt); RETURN NEW; END IF; END; \$\$ LANGUAGE plpgsql;")
+    .then((value){
+      print("⬜ ADMIN: Logs function created");
+    });
+  }
+
+  static Future<void> createTriggerLogs() async{
+    await connection.query("CREATE TRIGGER trace_delete BEFORE DELETE OR INSERT OR UPDATE ON \"Account\" FOR EACH ROW EXECUTE FUNCTION log ();")
+    .then((value) {
+      print("⬜ ADMIN: Logs trigger created");
+    });
+  }
+
+  static Future<void> dropTrggerLogs() async{
+    await connection.query("DROP Trigger trace_delete ON \"Account\" ")
+    .then((value){
+      print("⬛  ADMIN: Logs trigger dropped");
+    });
+  }
+
+  static Future<void> flushLogs() async{
+    await connection.query("DELETE FROM Log")
+    .then((value){
+      print("⬛  ADMIN: Logs flushed");
+    });
   }
 
 
