@@ -3,5 +3,6 @@
 .packages
 # server.dart compiled executable
 server
+server.exe
 # Conventional directory for build output.
 build/

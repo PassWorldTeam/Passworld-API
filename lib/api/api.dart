@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:passworld_api/db_to_api.dart';
 import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf.dart';
@@ -23,7 +24,7 @@ class API {
 
     if (await checkRequiredFields(required, body)) {
       try {
-        await AccountsToPostgres.selectHashById(body[required[0]]);
+        await AccountsToPostgres.selectHashByMail(body[required[0]]);
       } catch (e) {
         return Response(404,
             body: 'Not Found'); // no hash found -> 404 (Not Found)
@@ -67,8 +68,8 @@ class API {
     if (await checkRequiredFields(required, body)) {
       // List<String> twofa = body[required[3]];
       try {
-        await AccountsToPostgres.create(body[required[0]], body[required[1]],
-            body[required[2]] /*, twofa*/);
+        await AccountsToPostgres.createAccount(body[required[0]],
+            body[required[1]], body[required[2]] /*, twofa*/);
       } catch (e) {
         return Response(409,
             body: 'Account already existing'); // 409 (Conflict)
@@ -86,17 +87,49 @@ class API {
 
   // Update master password
   static Response changeMasterPassword(Request req) {
-    return Response.ok("master password chnaged");
+    return Response.ok("master password changed");
   }
 
   // Update mail
-  static Response changeMail(Request req) {
-    return Response.ok("master password chnaged");
+  static Future<Response> changeMail(Request req) async {
+    final List<String> required = ["email", "newMail"];
+    final body = await bodyToJson(req);
+
+    if (await checkRequiredFields(required, body)) {
+      try {
+        await AccountsToPostgres.updateMail(
+            body[required[0]], body[required[1]]);
+      } catch (e) {
+        return Response(403,
+            body: 'This is not the good password'); // 403 (Forbidden)
+      }
+      return Response(201,
+          body: 'user\'s mail succesfully changed'); // 201 (Created)
+    } else {
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
+    }
   }
 
   // Upload sqlite password file
-  static Response uploadPasswordDb(Request req) {
-    return Response.ok("");
+  static Future<Response> uploadPasswordDb(Request req) async {
+    sleep(Duration(seconds: 20));
+    Stream<List<int>> fileStream =
+        await req.read(); // await is needed even if IDE say no
+    List<List<int>> tmpFile = await fileStream.toList();
+    List<int> fileAsBytes = tmpFile[0];
+
+    File file = File("./passfile");
+    file.writeAsBytes(fileAsBytes);
+
+    print(await file.stat());
+
+    //File test = File("./haha.yu");
+    //await test.writeAsBytes(listBytes);
+    //print(await test.stat());
+
+    //print("Bytes: $listBytes");
+    //print("Lenght: $size");
+    return Response.ok("API: file received");
   }
 
   /*---------------|
