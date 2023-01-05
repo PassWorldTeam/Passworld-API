@@ -11,7 +11,7 @@ final _router = Router()
   ..get('/', API.rootHandler)
   ..get('/admin/users', API.getAllUsers)
   // POST (EN VRAI C'EST DES GET AVEC UN BODY)
-  ..post('/user/password-file', API.downloadPasswordDb)
+  ..get('/user/password-file', API.downloadPasswordDb)
   ..post('/auth', API.authenticator)
   ..post('/user/account', API.createAccount) // vrai post
   // PUT

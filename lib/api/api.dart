@@ -8,10 +8,6 @@ import 'package:passworld_api/database/accounts_to_postgres.dart';
 
 // Class for all static function that handles api routes
 class API {
-  /*---------------|
-  |-------GET------|
-  |---------------*/
-
   // Default response for /
   static Response rootHandler(Request req) {
     return Response.ok('Greetings from PassWorld!\n');
@@ -56,9 +52,6 @@ class API {
   });
   */
   }
-  /*---------------|
-  |------POST------|
-  |---------------*/
 
   // Create account
   static Future<Response> createAccount(Request req) async {
@@ -81,9 +74,24 @@ class API {
     }
   }
 
-  /*---------------|
-  |-------PUT------|
-  |---------------*/
+  // Delete Account
+  static Future<Response> deleteAccount(Request req) async {
+    final List<String> required = ["email", "password"];
+    final body = await bodyToJson(req);
+
+    if (await checkRequiredFields(required, body)) {
+      try {
+        await AccountsToPostgres.deleteAccount(
+            body[required[0]], body[required[1]]);
+      } catch (e) {
+        return Response(409,
+            body: 'There was a problem with deletion'); // 409 (Conflict)
+      }
+      return Response(200, body: 'Account successfully deleted'); // 200 (OK)
+    } else {
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
+    }
+  }
 
   // Update master password
   static Response changeMasterPassword(Request req) {
@@ -131,19 +139,6 @@ class API {
     //print("Lenght: $size");
     return Response.ok("API: file received");
   }
-
-  /*---------------|
-  |-----DELETE-----|
-  |---------------*/
-
-  // Delete account
-  static Response deleteAccount(Request req) {
-    return Response.ok("");
-  }
-
-  /*---------------|
-  |-------MISC-----|
-  |---------------*/
 
   // Check if required fields are in req body
   static Future<bool> checkRequiredFields(

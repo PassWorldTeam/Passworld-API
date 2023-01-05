@@ -23,18 +23,21 @@ class AccountsToPostgres {
     //initConnection();
   }
 
+  // Open connection to database
   static Future<void> openConnection() async {
     await connection.open().then((value) {
       print("🟢 PassWorld DB connection opened");
     });
   }
 
+  // Close connection to database
   static void closeConnection() async {
     connection.close().then((value) {
       print("🔴 PassWorld DB connection closed");
     });
   }
 
+  // Create tables and other things for the database
   static Future<void> createAccountTable() async {
     await openConnection();
     await connection.query("""
@@ -55,7 +58,8 @@ class AccountsToPostgres {
     print("🟦 Account Table Created");
   }
 
-  // Add support for twoFa if needed
+  // TODO: Add support for twoFa if needed
+  // Create user account
   static Future<void> createAccount(
       String mail, String hash, String salt /*, List<String> twoFaStr*/) async {
     await checkMailAlreadyExist(mail); // TODO: throw execption if != null
@@ -70,6 +74,15 @@ class AccountsToPostgres {
     print("✅ Account succesfully created");
   }
 
+  static Future<void> deleteAccount(String mail, String hash) async {
+    await checkMailAlreadyExist(mail); // TODO: throw execption if != null
+    // TODO: check authentication
+    await connection.query("DELETE FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {"mail": mail});
+    print("✅ Account succesfully deleted");
+  }
+
+  // get user passord hash by mail
   static Future<String> selectHashByMail(String mail) async {
     List<List<dynamic>> results = await connection.query(
         "SELECT hash FROM \"Account\" WHERE mail=@mail",
@@ -78,6 +91,7 @@ class AccountsToPostgres {
     return results[0][0];
   }
 
+  // check if mail is already used in database
   static Future<void> checkMailAlreadyExist(String mail) async {
     List<List<dynamic>> results = await connection.query(
         "SELECT id FROM \"Account\" WHERE mail=@mail",
@@ -87,7 +101,9 @@ class AccountsToPostgres {
     return;
   }
 
-  static Future<void> updatePass(String mail, String hash, String salt) async {
+  // Update user password
+  static Future<void> updatePassword(
+      String mail, String hash, String salt) async {
     if (selectHashByMail(mail) == null) {
       return;
     } else {
@@ -97,7 +113,8 @@ class AccountsToPostgres {
     }
   }
 
-  static Future<void> updateFilePass(String mail, File passwordFile) async {
+  // Update user password file
+  static Future<void> updatePasswordFile(String mail, File passwordFile) async {
     List<int> passwordBlob =
         utf8.encode(await passwordFile.readAsString(encoding: utf8));
 
@@ -110,6 +127,7 @@ class AccountsToPostgres {
     }
   }
 
+  // Update user twoFa
   static Future<void> updateTwoFa(String mail, List<String> tfa) async {
     List<String> twoFaStr = List.empty(growable: true);
 
@@ -122,6 +140,7 @@ class AccountsToPostgres {
     }
   }
 
+  // Update user mail
   static Future<void> updateMail(String mail, String newMail) async {
     if (selectHashByMail(mail) == null) {
       return;
@@ -133,15 +152,7 @@ class AccountsToPostgres {
     print("✅ Mail succesfully updated");
   }
 
-  static Future<void> deleteById(String id) async {
-    await connection.query("DELETE FROM \"Account\" WHERE id=@identifiant",
-        substitutionValues: {"identifiant": id});
-  }
-
-  //
-  // ADMIN
-  //
-
+  // ADMIN: get infos on all users
   static Future<PostgreSQLResult> getAllUsers() async {
     PostgreSQLResult res =
         await connection.query("SELECT id, hash, salt from \"Account\"");
