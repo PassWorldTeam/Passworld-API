@@ -94,8 +94,23 @@ class API {
   }
 
   // Update master password
-  static Response changeMasterPassword(Request req) {
-    return Response.ok("master password changed");
+  static Future<Response> changeMasterPassword(Request req) async {
+    final List<String> required = ["email", "newPassword", "newSalt"];
+    final body = await bodyToJson(req);
+
+    if (await checkRequiredFields(required, body)) {
+      try {
+        await AccountsToPostgres.updatePassword(
+            body[required[0]], body[required[1]], body[required[2]]);
+      } catch (e) {
+        return Response(403,
+            body: 'This is not the good password'); // 403 (Forbidden)
+      }
+      return Response(201,
+          body: 'user\'s password succesfully changed'); // 201 (Created)
+    } else {
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
+    }
   }
 
   // Update mail

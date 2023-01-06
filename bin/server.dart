@@ -18,6 +18,7 @@ final _router = Router()
   ..put('/user/master-password', API.changeMasterPassword)
   ..post('/user/password-file', API.uploadPasswordDb)
   ..put('/user/change-mail', API.changeMail)
+  ..put('/user/password', API.changeMasterPassword)
   // DELETE
   ..delete('/user/account', API.deleteAccount);
 

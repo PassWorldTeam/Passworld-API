@@ -103,13 +103,18 @@ class AccountsToPostgres {
 
   // Update user password
   static Future<void> updatePassword(
-      String mail, String hash, String salt) async {
+      String mail, String newHash, String newSalt) async {
     if (selectHashByMail(mail) == null) {
       return;
     } else {
       await connection.query(
-          "UPDATE \"Account\" SET hash=@hash, salt=@salt WHERE mail=@mail",
-          substitutionValues: {"mail": mail, "hash": hash, "salt": salt});
+          "UPDATE \"Account\" SET hash=@newHash and salt=@salt WHERE mail=@mail",
+          substitutionValues: {
+            "mail": mail,
+            "newHash": newHash,
+            "newSalt": newSalt
+          });
+      print("✅ Passworld succesfully updated");
     }
   }
 
@@ -148,8 +153,8 @@ class AccountsToPostgres {
       await connection.query(
           "UPDATE \"Account\" SET mail=@newMail WHERE mail=@mail",
           substitutionValues: {"newMail": newMail, "mail": mail});
+      print("✅ Mail succesfully updated");
     }
-    print("✅ Mail succesfully updated");
   }
 
   // ADMIN: get infos on all users
