@@ -59,14 +59,14 @@ class API {
     final body = await bodyToJson(req);
 
     if (await checkRequiredFields(required, body)) {
-      // List<String> twofa = body[required[3]];
       try {
-        await AccountsToPostgres.createAccount(body[required[0]],
-            body[required[1]], body[required[2]] /*, twofa*/);
+        await AccountsToPostgres.createAccount(
+            body[required[0]], body[required[1]], body[required[2]]);
       } catch (e) {
         return Response(409,
             body: 'Account already existing'); // 409 (Conflict)
       }
+      print("✅ Account succesfully created");
       return Response(201,
           body: 'Account successfully created'); // 201 (Created)
     } else {
@@ -81,12 +81,20 @@ class API {
 
     if (await checkRequiredFields(required, body)) {
       try {
-        await AccountsToPostgres.deleteAccount(
-            body[required[0]], body[required[1]]);
-      } catch (e) {
+        if (await checkAuthentication(body[required[0]], body[required[1]])) {
+          await AccountsToPostgres.deleteAccount(body[required[0]]);
+        } else {
+          return Response(403,
+              body:
+                  'You haven\'t provided the good password or mail'); // 403 (Forbidden)
+        }
+      } catch (e, s) {
+        print("Exception $e");
+        print("Stacktrace $s");
         return Response(409,
             body: 'There was a problem with deletion'); // 409 (Conflict)
       }
+      print("✅ Account succesfully deleted");
       return Response(200, body: 'Account successfully deleted'); // 200 (OK)
     } else {
       return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
@@ -174,6 +182,44 @@ class API {
   static Future<Map<String, dynamic>> bodyToJson(Request req) async {
     var tmp = await req.readAsString();
     return json.decode(tmp);
+  }
+
+  static Future<bool> checkAuthentication(
+      String givedMail, String givedPassword) async {
+    try {
+      if (!await checkMail(givedMail)) return false;
+    } catch (e) {
+      // catch if there is nothing in result of checkMail
+      return false;
+    }
+    if (!await checkPassword(givedMail, givedPassword)) return false;
+    print("authentication successed !!!");
+    return true;
+  }
+
+  static Future<bool> checkPassword(
+      String givedMail, String givedPassword) async {
+    print("check hash...");
+    var hash = await AccountsToPostgres.selectHashByMail(givedMail);
+
+    if (hash == givedPassword) {
+      print("hash is good");
+      return true;
+    }
+    print("hash is bad");
+    return false;
+  }
+
+  static Future<bool> checkMail(String givedMail) async {
+    print("check mail...");
+    var mail = await AccountsToPostgres.selectMailByMail(givedMail);
+
+    if (mail == givedMail) {
+      print("mail is good");
+      return true;
+    }
+    print("mail is bad");
+    return false;
   }
 
   //

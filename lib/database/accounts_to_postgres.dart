@@ -58,28 +58,17 @@ class AccountsToPostgres {
     print("🟦 Account Table Created");
   }
 
-  // TODO: Add support for twoFa if needed
   // Create user account
   static Future<void> createAccount(
-      String mail, String hash, String salt /*, List<String> twoFaStr*/) async {
-    await checkMailAlreadyExist(mail); // TODO: throw execption if != null
+      String mail, String hash, String salt) async {
     await connection.query(
         "INSERT INTO \"Account\" VALUES(nextval('plus1id'),@mail,@hash,@salt)",
-        substitutionValues: {
-          "mail": mail,
-          "hash": hash,
-          "salt": salt /*,
-          "twofa": twoFaStr*/
-        });
-    print("✅ Account succesfully created");
+        substitutionValues: {"mail": mail, "hash": hash, "salt": salt});
   }
 
-  static Future<void> deleteAccount(String mail, String hash) async {
-    await checkMailAlreadyExist(mail); // TODO: throw execption if != null
-    // TODO: check authentication
+  static Future<void> deleteAccount(String mail) async {
     await connection.query("DELETE FROM \"Account\" WHERE mail=@mail",
         substitutionValues: {"mail": mail});
-    print("✅ Account succesfully deleted");
   }
 
   // get user passord hash by mail
@@ -92,13 +81,12 @@ class AccountsToPostgres {
   }
 
   // check if mail is already used in database
-  static Future<void> checkMailAlreadyExist(String mail) async {
+  static Future<String> selectMailByMail(String mail) async {
     List<List<dynamic>> results = await connection.query(
-        "SELECT id FROM \"Account\" WHERE mail=@mail",
+        "SELECT mail FROM \"Account\" WHERE mail=@mail",
         substitutionValues: {"mail": mail});
-    print(results[0][0]);
 
-    return;
+    return results[0][0];
   }
 
   // Update user password
