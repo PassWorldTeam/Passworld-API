@@ -8,16 +8,16 @@ class AccountsToPostgres {
   //     username: 'pass', password: '1p2a3s4s5');
 
   /* Dev RemRem */
-  static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
-      username: 'hel', password: '');
+  // static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
+  //     username: 'hel', password: '');
 
   /* Production */
-  // static final connection = PostgreSQLConnection(
-  //     Platform.environment["DB_SERVER"]!,
-  //     5432,
-  //     Platform.environment["DB_DATABASE"]!,
-  //     username: Platform.environment["DB_USER"],
-  //     password: Platform.environment["DB_PASSWORD"]);
+  static final connection = PostgreSQLConnection(
+      Platform.environment["DB_SERVER"]!,
+      5432,
+      Platform.environment["DB_DATABASE"]!,
+      username: Platform.environment["DB_USER"],
+      password: Platform.environment["DB_PASSWORD"]);
 
   AccountsToPostgres() {
     //initConnection();
