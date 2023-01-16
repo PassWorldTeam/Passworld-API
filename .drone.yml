@@ -42,7 +42,6 @@ steps:
           from_secret: db_password
         CODEFIRST_CLIENTDRONE_ENV_DB_DATABASE:
           from_secret: db_database
-        ADMINS: remi.arnal
     depends_on: [docker-api-build]
 
   - name: db_creation
