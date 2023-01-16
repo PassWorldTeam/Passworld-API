@@ -19,16 +19,13 @@ class API {
     final body = await bodyToJson(req);
 
     if (await checkRequiredFields(required, body)) {
-      try {
-        await AccountsToPostgres.selectHashByMail(body[required[0]]);
-      } catch (e) {
-        return Response(404,
-            body: 'Not Found'); // no hash found -> 404 (Not Found)
+      if (await checkAuthentication(body[required[0]], body[required[1]])) {
+        return Response.ok('Succesfully Authenticated');
+      } else {
+        return Response.unauthorized('Bad password or email !'); // 401
       }
-      return Response.ok('Succesfully Authenticated'); // 200 (Ok)
     } else {
-      return Response.badRequest(
-          body: 'Bad password or email !'); // 400 (Bad Request)
+      return Response.badRequest(body: 'bad body'); // 401
     }
   }
 
