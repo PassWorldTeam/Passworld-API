@@ -7,9 +7,8 @@ import 'package:postgres/postgres.dart';
 /* 🟥 🟧 🟨 🟩 🟦 🟪 🟫 ⬛ ⬜ */
 
 class AccountsToPostgres {
-  
-   static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
-       username: 'pass', password: '1p2a3s4s5');
+  static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
+      username: 'pass', password: '1p2a3s4s5');
 
   /* Dev RemRem */
   // static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
@@ -19,7 +18,6 @@ class AccountsToPostgres {
       - error : no user
       - unknown : DB logic problem
   */
-
 
   /* Production */
   /*static final connection = PostgreSQLConnection(
@@ -64,7 +62,7 @@ class AccountsToPostgres {
           "salt": salt /*,
           "twofa": twoFaStr*/
         });
-    selectHashById(email);//Testing if the user is created
+    selectHashById(email); //Testing if the user is created
     print("✅ Account succesfully created");
   }
 
@@ -72,25 +70,30 @@ class AccountsToPostgres {
     List<List<dynamic>> results = await connection.query(
         "SELECT hash FROM \"Account\" WHERE id=@identifiant",
         substitutionValues: {"identifiant": id});
-    
-    if(results.length<1){
-      throw PostgreSQLException("No user for this id",severity: PostgreSQLSeverity.error);
+
+    if (results.length < 1) {
+      throw PostgreSQLException("No user for this id",
+          severity: PostgreSQLSeverity.error);
     }
-    if(results.length>1){
-      throw PostgreSQLException("WARNING ! : multiple user with this id",severity: PostgreSQLSeverity.unknown);
+    if (results.length > 1) {
+      throw PostgreSQLException("WARNING ! : multiple user with this id",
+          severity: PostgreSQLSeverity.unknown);
     }
     return results[0][0];
   }
 
   static Future<List<Int>> selectPassFileById(String id) async {
-    List<List<dynamic>> results = await connection.query("SELECT passwords FROM \"Account\" WHERE id=@identifiant",
-    substitutionValues: {"identifiant" : id});
-    
-    if(results.length<1){
-      throw PostgreSQLException("No user for this id",severity: PostgreSQLSeverity.error);
+    List<List<dynamic>> results = await connection.query(
+        "SELECT passwords FROM \"Account\" WHERE id=@identifiant",
+        substitutionValues: {"identifiant": id});
+
+    if (results.length < 1) {
+      throw PostgreSQLException("No user for this id",
+          severity: PostgreSQLSeverity.error);
     }
-    if(results.length>1){
-      throw PostgreSQLException("WARNING ! : multiple user with this id",severity: PostgreSQLSeverity.unknown);
+    if (results.length > 1) {
+      throw PostgreSQLException("WARNING ! : multiple user with this id",
+          severity: PostgreSQLSeverity.unknown);
     }
 
     return results[0][0];
@@ -111,9 +114,10 @@ class AccountsToPostgres {
     }
   }
 
-
-  static Future<void> updateFilePass(String identifiant, File passwordFile) async {
-    List<int> passwordBlob =utf8.encode(await passwordFile.readAsString(encoding: utf8));
+  static Future<void> updateFilePass(
+      String identifiant, File passwordFile) async {
+    List<int> passwordBlob =
+        utf8.encode(await passwordFile.readAsString(encoding: utf8));
 
     if (selectHashById(identifiant) == null) {
       return;
@@ -141,20 +145,18 @@ class AccountsToPostgres {
     await connection.query("DELETE FROM \"Account\" WHERE id=@identifiant",
         substitutionValues: {"identifiant": id});
 
-    try{
+    try {
       selectHashById(id);
-    }
-    on PostgreSQLException catch(e){
-
-      if(e.severity==PostgreSQLSeverity.error){
+    } on PostgreSQLException catch (e) {
+      if (e.severity == PostgreSQLSeverity.error) {
         deletion = 0;
       }
     }
 
-    if(deletion==1){
-      throw PostgreSQLException("User not deleted",severity: PostgreSQLSeverity.unknown);
+    if (deletion == 1) {
+      throw PostgreSQLException("User not deleted",
+          severity: PostgreSQLSeverity.unknown);
     }
-  
   }
 
   //
@@ -168,69 +170,70 @@ class AccountsToPostgres {
     return res;
   }
 
-  static Future<void> flushUsers() async{
-
+  static Future<void> flushUsers() async {
     await connection.query("DELETE FROM \"Account\" ");
 
-    List<List<dynamic>> rows = await connection.query("SELECT COUNT(*) FROM \"Account\" ");
+    List<List<dynamic>> rows =
+        await connection.query("SELECT COUNT(*) FROM \"Account\" ");
 
-    if(rows[0][0]!=0){
-      throw PostgreSQLException("Flush of users did not succeed",severity: PostgreSQLSeverity.unknown);
+    if (rows[0][0] != 0) {
+      throw PostgreSQLException("Flush of users did not succeed",
+          severity: PostgreSQLSeverity.unknown);
     }
 
     print("🟥 ADMIN: all users deleted");
-
-
   }
 
   static Future<void> flushTable() async {
     await connection.query("DROP TABLE \"Account\" ");
 
-    try{
-
-    await connection.query("SELECT * FROM \"Account\" ");
-    throw PostgreSQLException('Table Not dropped',severity: PostgreSQLSeverity.unknown);
-    }on PostgreSQLException{
-      print("🟥 ADMIN: tables droped");}
-    
+    try {
+      await connection.query("SELECT * FROM \"Account\" ");
+      throw PostgreSQLException('Table Not dropped',
+          severity: PostgreSQLSeverity.unknown);
+    } on PostgreSQLException {
+      print("🟥 ADMIN: tables droped");
+    }
   }
 
-  static Future<void> createLogsTable() async{
-    await connection.query("CREATE TABLE IF NOT EXISTS Log(wwhen TIMESTAMP,wwho char(20),whow char(20),wwhat varchar(800));")
-    .then((value) {
+  static Future<void> createLogsTable() async {
+    await connection
+        .query(
+            "CREATE TABLE IF NOT EXISTS Log(wwhen TIMESTAMP,wwho char(20),whow char(20),wwhat varchar(800));")
+        .then((value) {
       print("⬜ ADMIN: Logs table created");
     });
   }
 
-  static Future<void> createLogingFunction() async{
-    await connection.query("CREATE OR REPLACE FUNCTION log()RETURNS TRIGGER AS \$\$ BEGIN IF(TG_OP='DELETE')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt); RETURN OLD; ELSEIF(TG_OP='INSERT')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,NEW.id||' '||NEW.hash||' '||NEW.salt);RETURN NEW; ELSE INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt||' => '||NEW.id||' '||NEW.hash||' '||NEW.salt); RETURN NEW; END IF; END; \$\$ LANGUAGE plpgsql;")
-    .then((value){
+  static Future<void> createLogingFunction() async {
+    await connection
+        .query(
+            "CREATE OR REPLACE FUNCTION log()RETURNS TRIGGER AS \$\$ BEGIN IF(TG_OP='DELETE')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt); RETURN OLD; ELSEIF(TG_OP='INSERT')THEN INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,NEW.id||' '||NEW.hash||' '||NEW.salt);RETURN NEW; ELSE INSERT INTO Log VALUES(CURRENT_TIMESTAMP,current_role,TG_OP,OLD.id||' '||OLD.hash||' '||OLD.salt||' => '||NEW.id||' '||NEW.hash||' '||NEW.salt); RETURN NEW; END IF; END; \$\$ LANGUAGE plpgsql;")
+        .then((value) {
       print("⬜ ADMIN: Logs function created");
     });
   }
 
-  static Future<void> createTriggerLogs() async{
-    await connection.query("CREATE TRIGGER trace_delete BEFORE DELETE OR INSERT OR UPDATE ON \"Account\" FOR EACH ROW EXECUTE FUNCTION log ();")
-    .then((value) {
+  static Future<void> createTriggerLogs() async {
+    await connection
+        .query(
+            "CREATE TRIGGER trace_delete BEFORE DELETE OR INSERT OR UPDATE ON \"Account\" FOR EACH ROW EXECUTE FUNCTION log ();")
+        .then((value) {
       print("⬜ ADMIN: Logs trigger created");
     });
   }
 
-  static Future<void> dropTrggerLogs() async{
-    await connection.query("DROP Trigger trace_delete ON \"Account\" ")
-    .then((value){
+  static Future<void> dropTrggerLogs() async {
+    await connection
+        .query("DROP Trigger trace_delete ON \"Account\" ")
+        .then((value) {
       print("⬛  ADMIN: Logs trigger dropped");
     });
   }
 
-  static Future<void> flushLogs() async{
-    await connection.query("DELETE FROM Log")
-    .then((value){
+  static Future<void> flushLogs() async {
+    await connection.query("DELETE FROM Log").then((value) {
       print("⬛  ADMIN: Logs flushed");
     });
   }
-
-
-
-
 }
