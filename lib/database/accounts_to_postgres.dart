@@ -43,33 +43,41 @@ class AccountsToPostgres {
     });
   }
 
+  // Create tables and other things for the database
   static Future<void> createAccountTable() async {
-    await connection
-        .query(
-            "CREATE TABLE IF NOT EXISTS \"Account\"(id TEXT PRIMARY KEY,hash TEXT NOT NULL,salt TEXT NOT NULL,twofa VARCHAR(50)[],passwords INTEGER[])")
-        .then((value) {
-      print("🟦 Account Table Created");
-    });
+    await openConnection();
+    await connection.query("""
+    CREATE TABLE IF NOT EXISTS \"Account\"(
+              id INT PRIMARY KEY,
+              mail TEXT NOT NULL UNIQUE,
+              hash TEXT NOT NULL,
+              salt TEXT NOT NULL,
+              twofa VARCHAR(50)[],
+              password_file INTEGER[]
+              )""");
+
+    await connection.query("""
+    CREATE SEQUENCE IF NOT EXISTS plus1id
+    INCREMENT 1
+    START 1""");
+
+    print("🟦 Account Table Created");
+    await initLogs();
   }
 
-  // Add support for twoFa if needed
-  static Future<void> create(String email, String hash,
-      String salt /*, List<String> twoFaStr*/) async {
-    await connection.query("INSERT INTO \"Account\" VALUES(@id,@hash,@salt)",
-        substitutionValues: {
-          "id": email,
-          "hash": hash,
-          "salt": salt /*,
-          "twofa": twoFaStr*/
-        });
-    selectHashById(email); //Testing if the user is created
-    print("✅ Account succesfully created");
+  // Create user account
+  static Future<void> createAccount(
+      String mail, String hash, String salt) async {
+    await connection.query(
+        "INSERT INTO \"Account\" VALUES(nextval('plus1id'),@mail,@hash,@salt)",
+        substitutionValues: {"mail": mail, "hash": hash, "salt": salt});
   }
 
-  static Future<String> selectHashById(String id) async {
+  // get user passord hash by mail
+  static Future<String> selectHashByMail(String mail) async {
     List<List<dynamic>> results = await connection.query(
-        "SELECT hash FROM \"Account\" WHERE id=@identifiant",
-        substitutionValues: {"identifiant": id});
+        "SELECT hash FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {"mail": mail});
 
     if (results.length < 1) {
       throw PostgreSQLException("No user for this id",
@@ -79,6 +87,15 @@ class AccountsToPostgres {
       throw PostgreSQLException("WARNING ! : multiple user with this id",
           severity: PostgreSQLSeverity.unknown);
     }
+    return results[0][0];
+  }
+
+  // check if mail is already used in database
+  static Future<String> selectMailByMail(String mail) async {
+    List<List<dynamic>> results = await connection.query(
+        "SELECT mail FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {"mail": mail});
+
     return results[0][0];
   }
 
@@ -99,54 +116,57 @@ class AccountsToPostgres {
     return results[0][0];
   }
 
-  static Future<void> updatePass(
-      String identifiant, String hash, String salt) async {
-    if (selectHashById(identifiant) == null) {
+  // Update user password
+  static Future<void> updatePassword(
+      String mail, String newHash, String newSalt) async {
+    if (selectHashByMail(mail) == null) {
       return;
     } else {
       await connection.query(
-          "UPDATE \"Account\" SET hash=@h, salt=@s  WHERE id=@identifiant",
+          "UPDATE \"Account\" SET hash=@newHash and salt=@salt WHERE mail=@mail",
           substitutionValues: {
-            "identifiant": identifiant,
-            "h": hash,
-            "s": salt
+            "mail": mail,
+            "newHash": newHash,
+            "newSalt": newSalt
           });
+      print("✅ Passworld succesfully updated");
     }
   }
 
-  static Future<void> updateFilePass(
-      String identifiant, File passwordFile) async {
+  // Update user password file
+  static Future<void> updatePasswordFile(String mail, File passwordFile) async {
     List<int> passwordBlob =
         utf8.encode(await passwordFile.readAsString(encoding: utf8));
 
-    if (selectHashById(identifiant) == null) {
+    if (selectHashByMail(mail) == null) {
       return;
     } else {
       await connection.query(
           "UPDATE \"Account\" SET passwords=@p WHERE id=@identifiant",
-          substitutionValues: {"identifiant": identifiant, "p": passwordBlob});
+          substitutionValues: {"identifiant": mail, "p": passwordBlob});
     }
   }
 
-  static Future<void> updateTwoFa(String identifiant, List<String> tfa) async {
+  // Update user twoFa
+  static Future<void> updateTwoFa(String mail, List<String> tfa) async {
     List<String> twoFaStr = List.empty(growable: true);
 
-    if (selectHashById(identifiant) == null) {
+    if (selectHashByMail(mail) == null) {
       return;
     } else {
       await connection.query(
           "UPDATE \"Account\" SET twofa=@tfa WHERE id=@identifiant",
-          substitutionValues: {"identifiant": identifiant, "tfa": tfa});
+          substitutionValues: {"identifiant": mail, "tfa": tfa});
     }
   }
 
-  static Future<void> deleteById(String id) async {
+  static Future<void> deleteAccount(String mail) async {
     var deletion = 1;
-    await connection.query("DELETE FROM \"Account\" WHERE id=@identifiant",
-        substitutionValues: {"identifiant": id});
+    await connection.query("DELETE FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {"mail": mail});
 
     try {
-      selectHashById(id);
+      selectHashByMail(mail);
     } on PostgreSQLException catch (e) {
       if (e.severity == PostgreSQLSeverity.error) {
         deletion = 0;
@@ -156,6 +176,18 @@ class AccountsToPostgres {
     if (deletion == 1) {
       throw PostgreSQLException("User not deleted",
           severity: PostgreSQLSeverity.unknown);
+    }
+  }
+
+  // Update user mail
+  static Future<void> updateMail(String mail, String newMail) async {
+    if (selectHashByMail(mail) == null) {
+      return;
+    } else {
+      await connection.query(
+          "UPDATE \"Account\" SET mail=@newMail WHERE mail=@mail",
+          substitutionValues: {"newMail": newMail, "mail": mail});
+      print("✅ Mail succesfully updated");
     }
   }
 
@@ -235,5 +267,11 @@ class AccountsToPostgres {
     await connection.query("DELETE FROM Log").then((value) {
       print("⬛  ADMIN: Logs flushed");
     });
+  }
+
+  static Future<void> initLogs() async {
+    await createLogsTable();
+    await createLogingFunction();
+    createTriggerLogs();
   }
 }
