@@ -13,6 +13,23 @@ class API {
     return Response.ok('Greetings from PassWorld!\n');
   }
 
+  static Future<Response> getSalt(Request req) async {
+    final List<String> required = ["email"];
+    final body = await bodyToJson(req);
+
+    if (await checkRequiredFields(required, body)) {
+      try {
+        String salt =
+            await AccountsToPostgres.selectSaltByMail(body[required[0]]);
+        return Response(200, body: salt);
+      } catch (e) {
+        return Response(204, body: 'Account already existing'); // No content
+      }
+    } else {
+      return Response.badRequest(body: 'bad body');
+    }
+  }
+
   // Check for authentication
   static Future<Response> authenticator(Request req) async {
     final List<String> required = ["email", "password"];

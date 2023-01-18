@@ -8,16 +8,16 @@ class AccountsToPostgres {
   //     username: 'pass', password: '1p2a3s4s5');
 
   /* Dev RemRem */
-  // static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
-  //     username: 'hel', password: '');
+  static final connection = PostgreSQLConnection("localhost", 5432, 'passworld',
+      username: 'hel', password: '');
 
   /* Production */
-  static final connection = PostgreSQLConnection(
-      Platform.environment["DB_SERVER"]!,
-      5432,
-      Platform.environment["DB_DATABASE"]!,
-      username: Platform.environment["DB_USER"],
-      password: Platform.environment["DB_PASSWORD"]);
+  // static final connection = PostgreSQLConnection(
+  //     Platform.environment["DB_SERVER"]!,
+  //     5432,
+  //     Platform.environment["DB_DATABASE"]!,
+  //     username: Platform.environment["DB_USER"],
+  //     password: Platform.environment["DB_PASSWORD"]);
 
   AccountsToPostgres() {
     //initConnection();
@@ -89,6 +89,15 @@ class AccountsToPostgres {
     return results[0][0];
   }
 
+  // check if mail is already used in database
+  static Future<String> selectSaltByMail(String mail) async {
+    List<List<dynamic>> results = await connection.query(
+        "SELECT salt FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {"mail": mail});
+
+    return results[0][0];
+  }
+
   // Update user password
   static Future<void> updatePassword(
       String mail, String newHash, String newSalt) async {
@@ -148,7 +157,7 @@ class AccountsToPostgres {
   // ADMIN: get infos on all users
   static Future<PostgreSQLResult> getAllUsers() async {
     PostgreSQLResult res =
-        await connection.query("SELECT id, hash, salt from \"Account\"");
+        await connection.query("SELECT mail, hash, salt from \"Account\"");
     print("🟥 ADMIN: get all users");
     return res;
   }
