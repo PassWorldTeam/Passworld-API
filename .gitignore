@@ -2,6 +2,7 @@
 .dart_tool/
 .packages
 # server.dart compiled executable
+pubspec.lock
 server
 server.exe
 # Conventional directory for build output.

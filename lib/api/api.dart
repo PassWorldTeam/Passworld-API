@@ -46,27 +46,6 @@ class API {
     }
   }
 
-  // Download sqlite password file
-  static Response downloadPasswordDb(Request req) {
-    final mail = req.params['mail'];
-    final password = req.params['cyphered_password_hash'];
-
-    // Database query -> return file (List<int>)
-    // Create stream from List<int>
-    // Rename file -> db_password_<mail>_<date>
-    // Send file
-
-    return Response.ok("");
-
-    /*
-  Stream<List<int>> fileStream = file.openRead();
-  return Response.ok(fileStream, headers: {
-    'Content-Type': 'application/octet-stream',
-    'Content-Disposition': 'attachment, filename="$reqFile"'
-  });
-  */
-  }
-
   // Create account
   static Future<Response> createAccount(Request req) async {
     final List<String> required = ["email", "password", "salt"];
@@ -157,24 +136,36 @@ class API {
 
   // Upload sqlite password file
   static Future<Response> uploadPasswordDb(Request req) async {
-    sleep(Duration(seconds: 20));
-    Stream<List<int>> fileStream =
-        await req.read(); // await is needed even if IDE say no
-    List<List<int>> tmpFile = await fileStream.toList();
-    List<int> fileAsBytes = tmpFile[0];
+    final List<String> required = ["email", "password", "file"];
+    final body = await bodyToJson(req); // await is needed even if IDE say no
+
+    String fileAsBytes = body[required[2]];
+
+    var arrayBytes = fileAsBytes.split(',');
+    arrayBytes.removeLast();
+    var arrayBytes2 = arrayBytes.map(int.parse).toList();
+
+    await AccountsToPostgres.updatePasswordFile(body[required[0]], arrayBytes2);
 
     File file = File("./passfile");
-    file.writeAsBytes(fileAsBytes);
+    file.writeAsBytes(arrayBytes2);
 
     print(await file.stat());
-
-    //File test = File("./haha.yu");
-    //await test.writeAsBytes(listBytes);
-    //print(await test.stat());
-
-    //print("Bytes: $listBytes");
-    //print("Lenght: $size");
     return Response.ok("API: file received");
+  }
+
+  // Download sqlite password file
+  static Future<Response> downloadPasswordDb(Request req) async {
+    final List<String> required = ["email", "password"];
+    final body = await bodyToJson(req);
+
+    List<int> file =
+        await AccountsToPostgres.getPasswordFile(body[required[0]]);
+    for (int i in file) {
+      print(i);
+    }
+
+    return Response.ok(file.toString());
   }
 
   // Check if required fields are in req body

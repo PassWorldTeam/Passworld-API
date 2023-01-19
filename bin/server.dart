@@ -12,7 +12,7 @@ final _router = Router()
   ..get('/admin/users', API.getAllUsers)
   ..post('/user/salt', API.getSalt)
   // POST (EN VRAI C'EST DES GET AVEC UN BODY)
-  ..post('/user/password-file', API.downloadPasswordDb)
+  ..post('/user/password-file-download', API.downloadPasswordDb)
   ..post('/auth', API.authenticator)
   ..post('/user/account', API.createAccount) // vrai post
   // PUT
@@ -51,7 +51,7 @@ void main(List<String> args) async {
   final handler = Pipeline().addMiddleware(logRequests()).addHandler(_router);
 
   // For running in containers, we respect the PORT environment variable.
-  final port = int.parse(Platform.environment['PORT'] ?? '8080');
+  final port = int.parse(Platform.environment['PORT'] ?? '8989');
   final server = await serve(handler, ip, port);
   print('Server listening on port ${server.port}');
 }

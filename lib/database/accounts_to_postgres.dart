@@ -116,17 +116,21 @@ class AccountsToPostgres {
   }
 
   // Update user password file
-  static Future<void> updatePasswordFile(String mail, File passwordFile) async {
-    List<int> passwordBlob =
-        utf8.encode(await passwordFile.readAsString(encoding: utf8));
+  static Future<void> updatePasswordFile(
+      String mail, List<int> passwordFile) async {
+    await connection.query(
+        "UPDATE \"Account\" SET password_file=@p WHERE mail=@mail",
+        substitutionValues: {"mail": mail, "p": passwordFile});
+  }
 
-    if (selectHashByMail(mail) == null) {
-      return;
-    } else {
-      await connection.query(
-          "UPDATE \"Account\" SET passwords=@p WHERE id=@identifiant",
-          substitutionValues: {"identifiant": mail, "p": passwordBlob});
-    }
+  static Future<List<int>> getPasswordFile(String mail) async {
+    List<List<dynamic>> data = await connection.query(
+        "SELECT password_file FROM \"Account\" WHERE mail=@mail",
+        substitutionValues: {
+          "mail": mail,
+        });
+
+    return data[0][0];
   }
 
   // Update user twoFa
