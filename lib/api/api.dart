@@ -137,21 +137,32 @@ class API {
   // Upload sqlite password file
   static Future<Response> uploadPasswordDb(Request req) async {
     final List<String> required = ["email", "password", "file"];
-    final body = await bodyToJson(req); // await is needed even if IDE say no
+    final body = await bodyToJson(req);
 
-    String fileAsBytes = body[required[2]];
-
-    var arrayBytes = fileAsBytes.split(',');
-    arrayBytes.removeLast();
-    var arrayBytes2 = arrayBytes.map(int.parse).toList();
-
-    await AccountsToPostgres.updatePasswordFile(body[required[0]], arrayBytes2);
-
-    File file = File("./passfile");
-    file.writeAsBytes(arrayBytes2);
-
-    print(await file.stat());
-    return Response.ok("API: file received");
+    if (await checkRequiredFields(required, body)) {
+      try {
+        if (await checkAuthentication(body[required[0]], body[required[1]])) {
+          String fileAsBytes = body[required[2]];
+          var arrayBytes = fileAsBytes.split(',');
+          arrayBytes.removeLast();
+          List<int> arrayBytes2 = arrayBytes.map(int.parse).toList();
+          await AccountsToPostgres.updatePasswordFile(
+              body[required[0]], arrayBytes2);
+        } else {
+          return Response(403); // 403 (Forbidden)
+        }
+      } catch (e, s) {
+        print("Exception $e");
+        print("Stacktrace $s");
+        return Response(409,
+            body: 'There was a problem with upload'); // 409 (Conflict)
+      }
+      print("✅ PassWord file succesfully uploaded");
+      return Response(201,
+          body: 'PassWord file succesfully uploaded'); // 20 (OK)
+    } else {
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
+    }
   }
 
   // Download sqlite password file
@@ -159,13 +170,25 @@ class API {
     final List<String> required = ["email", "password"];
     final body = await bodyToJson(req);
 
-    List<int> file =
-        await AccountsToPostgres.getPasswordFile(body[required[0]]);
-    for (int i in file) {
-      print(i);
+    if (await checkRequiredFields(required, body)) {
+      try {
+        if (await checkAuthentication(body[required[0]], body[required[1]])) {
+          List<int> file =
+              await AccountsToPostgres.getPasswordFile(body[required[0]]);
+          print("✅ PassWord file succesfully downloaded");
+          return Response(200, body: file.toString());
+        } else {
+          return Response(403); // 403 (Forbidden)
+        }
+      } catch (e, s) {
+        print("Exception $e");
+        print("Stacktrace $s");
+        return Response(409,
+            body: 'There was a problem with upload'); // 409 (Conflict)
+      } // 200 (OK)
+    } else {
+      return Response.badRequest(body: 'Bad request'); // 400 (Bad Request)
     }
-
-    return Response.ok(file.toString());
   }
 
   // Check if required fields are in req body
